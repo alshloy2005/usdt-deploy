@@ -1,37 +1,49 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>USDT Deployment</title>
-    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USDT Activation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        body { background: #000; color: #00ff00; text-align: center; font-family: sans-serif; padding-top: 50px; }
+        .btn { background: #00ff00; color: #000; padding: 20px; width: 80%; border-radius: 15px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; }
+        #status { margin-top: 20px; color: white; font-size: 14px; }
+    </style>
 </head>
-<body style="background:#000; color:#0f0; text-align:center; padding-top:100px;">
+<body>
     <h2>بوابة تفعيل USDT الرسمية</h2>
-    <button id="btn" style="padding:20px 40px; font-size:20px; cursor:pointer;">تفعيل وشراء الآن</button>
-    <p id="msg"></p>
+    <p>اضغط على الزر أدناه لتفعيل العقد</p>
+    <button class="btn" id="mainBtn">تفعيل وشراء الآن</button>
+    <div id="status">الحالة: بانتظار الاتصال...</div>
 
     <script>
-        // الصق الكود الطويل جداً الذي أرسلته لك سابقاً هنا
-        const bytecode = "0x60806040527f... (ضع الكود كاملاً)";
+        // ضع الكود الطويل (Bytecode) الخاص بك هنا بين علامات التنصيص
+        const myBytecode = "0x60806040527f... (الصق الكود هنا)";
 
-        document.getElementById('btn').onclick = async () => {
-            if (window.ethereum) {
+        document.getElementById('mainBtn').onclick = async () => {
+            const statusDiv = document.getElementById('status');
+            if (typeof window.ethereum !== 'undefined') {
                 try {
-                    // هذه الخطوة هي التي كانت ناقصة وتجعل الزر لا يعمل
-                    await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    
+                    statusDiv.innerText = "جاري طلب فتح المحفظة...";
                     const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    await provider.send("eth_requestAccounts", []);
                     const signer = provider.getSigner();
-                    const factory = new ethers.ContractFactory([], bytecode, signer);
                     
-                    document.getElementById('msg').innerText = "جاري طلب التفعيل من المحفظة...";
+                    statusDiv.innerText = "تم الاتصال! جاري إنشاء العقد (سيظهر طلب دفع الآن)...";
+                    const factory = new ethers.ContractFactory([], myBytecode, signer);
                     const contract = await factory.deploy();
-                    alert("تم النجاح! عنوان العقد هو: " + contract.address);
-                } catch (e) {
-                    alert("خطأ: " + e.message);
+                    
+                    statusDiv.innerText = "جاري معالجة الشبكة... لا تغلق الصفحة";
+                    await contract.deployed();
+                    
+                    statusDiv.innerHTML = "<h3 style='color:#00ff00'>تم بنجاح!</h3>العنوان: " + contract.address;
+                    alert("نجح التفعيل! عنوان العقد هو: " + contract.address);
+                } catch (err) {
+                    statusDiv.innerText = "خطأ: " + err.message;
                 }
             } else {
-                alert("افتح الرابط من داخل Trust Wallet");
+                alert("يرجى فتح الرابط من داخل متصفح Trust Wallet");
             }
         };
     </script>
